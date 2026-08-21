@@ -106,7 +106,7 @@ def _stitch(early: pd.DataFrame, late: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([before, blended, after], ignore_index=True).sort_values("time").reset_index(drop=True)
 
 
-def get_forecast(lat: int, lon: int) -> pd.DataFrame:
+def get_forecast(lat: float, lon: float) -> pd.DataFrame:
     now: datetime = datetime.now(timezone.utc).replace(tzinfo=None)
     located_dict: dict[str, pd.DataFrame] = {}
     fcst_df: pd.DataFrame = pd.DataFrame()
@@ -126,6 +126,10 @@ def get_forecast(lat: int, lon: int) -> pd.DataFrame:
             point = ds.isel(y=int(iy), x=int(ix))
 
         located_dict[model] = point[["t2m", "u10", "v10", "tp", "d2m", "sp"]].to_dataframe().reset_index().drop(columns=["time"]).rename(columns={"valid_time": "time"})
+
+        if model in ("ifs", "aifs"):
+            located_dict[model] = located_dict[model].sort_values("time")
+            located_dict[model]["tp"] = located_dict[model]["tp"].diff().fillna(located_dict[model]["tp"]).clip(lower=0)
     
     ordered = ["hrrr_nowcast", "hrrr_extended", "ifs", "aifs"]
     fcst_df = located_dict[ordered[0]]
