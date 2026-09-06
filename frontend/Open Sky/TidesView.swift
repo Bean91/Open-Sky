@@ -276,9 +276,6 @@ struct TidesView: View {
     }
 }
 
-/// Tides are lunar-driven, so the background ties directly to that: a time-of-day sky gradient
-/// with the real current moon phase glowing overhead, and a slow drifting waterline near the
-/// bottom. No weather-condition dependency, no external assets needed.
 private struct TideBackgroundView: View {
     private var hourFraction: Double {
         let comps = Calendar.current.dateComponents([.hour, .minute], from: Date())

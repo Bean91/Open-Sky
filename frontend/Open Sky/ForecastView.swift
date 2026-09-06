@@ -15,11 +15,6 @@ protocol TimeSeriesPoint {
     var time: Date { get }
     static func interpolated(at time: Date, before: Self, after: Self) -> Self
 }
-
-/// Filters points to the given local day, synthesizing an interpolated point exactly at the day's
-/// start/end boundary whenever the raw data straddles midnight without landing on it — so a day's
-/// chart always spans the true full 24-hour window instead of stopping at whatever timestamps
-/// happen to exist in the source data.
 func dayBoundedPoints<Point: TimeSeriesPoint>(_ points: [Point], dayStart: Date) -> [Point] {
     let start = dayStart
     let end = Calendar.current.date(byAdding: .day, value: 1, to: start) ?? start

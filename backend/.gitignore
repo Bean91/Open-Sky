@@ -10,3 +10,9 @@ wheels/
 .venv
 
 **/.DS_store
+
+# Skyfield ephemeris / star catalog downloads
+*.bsp
+hip_main.dat
+finals2000A.all
+Skyfield-Data/

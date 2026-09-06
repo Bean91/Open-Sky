@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-let BASE_URL: String = "http://localhost:8000"
+let BASE_URL: String = "https://sky.openoted.com"
 
 @main
 struct Open_SkyApp: App {
