@@ -79,6 +79,8 @@ struct TidesView: View {
     @State private var isRefreshing = false
     @State private var loadError: String?
 
+    @AppStorage("tideHeightUnit") private var tideHeightUnit = TideHeightUnit.meters
+
     private var activeLocation: SelectedLocation? {
         selectedLocation ?? currentLocationLabel
     }
@@ -162,7 +164,7 @@ struct TidesView: View {
                             Text(extreme.isHigh ? "High" : "Low")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
-                            Text("\(extreme.height, specifier: "%.1f") m")
+                            Text("\(tideHeightUnit.convert(fromMeters: extreme.height), specifier: "%.1f")\(tideHeightUnit.symbol)")
                                 .font(.caption.bold())
                                 .monospacedDigit()
                         }
@@ -198,8 +200,8 @@ struct TidesView: View {
                             title: "Tide Height",
                             color: .cyan,
                             points: selectedDayPoints,
-                            value: { $0.height },
-                            unit: " m",
+                            value: { tideHeightUnit.convert(fromMeters: $0.height) },
+                            unit: tideHeightUnit.symbol,
                             style: .line,
                             iconName: "water.waves",
                             referenceNow: referenceNow,

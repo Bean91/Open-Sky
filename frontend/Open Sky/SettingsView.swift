@@ -14,6 +14,15 @@ struct SettingsView: View {
     @AppStorage("temperatureUnit") private var temperatureUnit = TemperatureUnit.systemDefault
     @AppStorage("windSpeedUnit") private var windSpeedUnit = WindSpeedUnit.metersPerSecond
     @AppStorage("precipitationUnit") private var precipitationUnit = PrecipitationUnit.millimeters
+    @AppStorage("tideHeightUnit") private var tideHeightUnit = TideHeightUnit.meters
+    @AppStorage("forecastSmoothingLevel") private var forecastSmoothingLevel = ForecastSmoothingLevel.medium
+
+    private var smoothingSliderValue: Binding<Double> {
+        Binding(
+            get: { Double(forecastSmoothingLevel.rawValue) },
+            set: { forecastSmoothingLevel = ForecastSmoothingLevel(rawValue: Int($0.rounded())) ?? .medium }
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -43,6 +52,35 @@ struct SettingsView: View {
                             Text(unit.label).tag(unit)
                         }
                     }
+                    Picker("Tide Height", selection: $tideHeightUnit) {
+                        ForEach(TideHeightUnit.allCases) { unit in
+                            Text(unit.label).tag(unit)
+                        }
+                    }
+                }
+
+                Section("Forecast") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Graph Smoothing")
+                            Spacer()
+                            Text(forecastSmoothingLevel.label)
+                                .foregroundStyle(.secondary)
+                        }
+                        Slider(
+                            value: smoothingSliderValue,
+                            in: 0...Double(ForecastSmoothingLevel.allCases.count - 1),
+                            step: 1
+                        )
+                        HStack {
+                            Text("Most Accurate")
+                            Spacer()
+                            Text("Most Smooth")
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
                 }
             }
             .navigationTitle("Settings")

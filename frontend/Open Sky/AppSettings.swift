@@ -40,8 +40,6 @@ enum TemperatureUnit: String, CaseIterable, Identifiable {
         self == .kelvin ? value : self == .celsius ? value - 273.15 : (value - 273.15) * 9 / 5 + 32
     }
 
-    /// Sensible first-launch default before the user has picked one in Settings — Kelvin is a poor
-    /// default for a weather app, so infer Fahrenheit/Celsius from the device's measurement system.
     static var systemDefault: TemperatureUnit {
         Locale.current.measurementSystem == .us ? .fahrenheit : .celsius
     }
@@ -86,5 +84,36 @@ enum PrecipitationUnit: String, CaseIterable, Identifiable {
 
     func convert(fromMillimeters value: Double) -> Double {
         self == .millimeters ? value : value * 0.0393700787
+    }
+}
+
+enum ForecastSmoothingLevel: Int, CaseIterable, Identifiable {
+    case none, light, medium, heavy, maximum
+
+    var id: Int { rawValue }
+
+    /// Centered moving-average radius applied at this level — 0 disables smoothing entirely.
+    var radius: Int { rawValue }
+
+    var label: String {
+        switch self {
+        case .none: "Most Accurate"
+        case .light: "Light"
+        case .medium: "Medium"
+        case .heavy: "Heavy"
+        case .maximum: "Most Smooth"
+        }
+    }
+}
+
+enum TideHeightUnit: String, CaseIterable, Identifiable {
+    case meters, feet
+
+    var id: String { rawValue }
+    var label: String { self == .meters ? "Meters (m)" : "Feet (ft)" }
+    var symbol: String { self == .meters ? " m" : " ft" }
+
+    func convert(fromMeters value: Double) -> Double {
+        self == .meters ? value : value * 3.28084
     }
 }

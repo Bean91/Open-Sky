@@ -34,6 +34,32 @@ func dayBoundedPoints<Point: TimeSeriesPoint>(_ points: [Point], dayStart: Date)
     return result
 }
 
+func smoothed(_ points: [ForecastPoint], radius: Int = 1) -> [ForecastPoint] {
+    guard points.count > 2 else { return points }
+
+    func average(_ keyPath: (ForecastPoint) -> Double, at index: Int) -> Double {
+        let lo = max(0, index - radius)
+        let hi = min(points.count - 1, index + radius)
+        let window = points[lo...hi]
+        return window.map(keyPath).reduce(0, +) / Double(window.count)
+    }
+
+    return points.enumerated().map { index, point in
+        ForecastPoint(
+            time: point.time,
+            t2m: average({ $0.t2m }, at: index),
+            u10: average({ $0.u10 }, at: index),
+            v10: average({ $0.v10 }, at: index),
+            tp: average({ $0.tp }, at: index),
+            d2m: average({ $0.d2m }, at: index),
+            sp: average({ $0.sp }, at: index),
+            tcc: average({ $0.tcc }, at: index),
+            pop: average({ $0.pop }, at: index),
+            thunder: point.thunder
+        )
+    }
+}
+
 struct ForecastPoint: Codable, TimeSeriesPoint {
     let time: Date
     let t2m: Double
@@ -146,6 +172,7 @@ struct ForecastView: View {
     @AppStorage("temperatureUnit") private var temperatureUnit = TemperatureUnit.systemDefault
     @AppStorage("windSpeedUnit") private var windSpeedUnit = WindSpeedUnit.metersPerSecond
     @AppStorage("precipitationUnit") private var precipitationUnit = PrecipitationUnit.millimeters
+    @AppStorage("forecastSmoothingLevel") private var forecastSmoothingLevel = ForecastSmoothingLevel.medium
 
     init(points: [ForecastPoint] = []) {
         _points = State(initialValue: points)
@@ -209,6 +236,10 @@ struct ForecastView: View {
         dayBoundedPoints(points, dayStart: selectedDayStart)
     }
 
+    private var displayedPoints: [ForecastPoint] {
+        smoothed(selectedDayPoints, radius: forecastSmoothingLevel.radius)
+    }
+
     private var referenceNow: Date? {
         selectedDayOffset == 0 ? Date() : nil
     }
@@ -241,7 +272,7 @@ struct ForecastView: View {
                         MetricChart(
                             title: "Temperature",
                             color: .orange,
-                            points: selectedDayPoints,
+                            points: displayedPoints,
                             value: { temperatureUnit.convert(fromKelvin: $0.t2m) },
                             unit: temperatureUnit.symbol,
                             style: .line,
@@ -255,7 +286,7 @@ struct ForecastView: View {
                         MetricChart(
                             title: "Wind",
                             color: .teal,
-                            points: selectedDayPoints,
+                            points: displayedPoints,
                             value: { windSpeedUnit.convert(fromMetersPerSecond: sqrt(pow($0.u10, 2) + pow($0.v10, 2))) },
                             unit: windSpeedUnit.symbol,
                             style: .line,
@@ -271,7 +302,7 @@ struct ForecastView: View {
                         MetricChart(
                             title: "Precipitation",
                             color: .blue,
-                            points: selectedDayPoints,
+                            points: displayedPoints,
                             value: { precipitationUnit.convert(fromMillimeters: $0.tp) },
                             unit: precipitationUnit.symbol,
                             style: .bar,
@@ -284,7 +315,7 @@ struct ForecastView: View {
                         MetricChart(
                             title: "Precip Chance",
                             color: .indigo,
-                            points: selectedDayPoints,
+                            points: displayedPoints,
                             value: { $0.pop },
                             unit: "%",
                             style: .bar,
@@ -475,7 +506,7 @@ struct MetricChart<Point: TimeSeriesPoint>: View {
         dynamicYScale: Bool = false,
         zeroFloorYScale: Bool = false,
         fixedYDomain: ClosedRange<Double>? = nil,
-        interpolationMethod: InterpolationMethod = .monotone
+        interpolationMethod: InterpolationMethod = .catmullRom
     ) {
         self.title = title
         self.color = color
