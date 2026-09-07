@@ -231,7 +231,7 @@ struct ForecastView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    DayBar(selectedDayOffset: $selectedDayOffset)
+                    DayBar(selectedDayOffset: $selectedDayOffset, dayCount: 10)
 
                     if points.isEmpty {
                         ForEach(0..<4, id: \.self) { _ in
