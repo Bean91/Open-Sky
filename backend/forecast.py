@@ -17,7 +17,8 @@ _map_background_thread: threading.Thread | None = None
 
 MAX_CONCURRENT_FETCHES = 24
 BACKGROUND_REFRESH_INTERVAL_SECONDS = 300
-MIN_GEFS_MEMBERS = 20
+GEFS_MEMBERS_TO_FETCH = 10
+MIN_GEFS_MEMBERS = 8
 
 class ForecastNotReadyError(Exception):
     """Raised when no request has ever successfully populated the cache yet."""
@@ -225,7 +226,7 @@ def _refresh_cached_forecast() -> None:
                 gefs_run_time = _latest_run_time("gefs", now)
                 run_times["gefs"] = gefs_run_time
                 gefs_fxx_range = list(range(6, 366, 6))
-                gefs_members = [f"p{i:02d}" for i in range(1, 31)]
+                gefs_members = [f"p{i:02d}" for i in range(1, GEFS_MEMBERS_TO_FETCH + 1)]
                 for member in gefs_members:
                     for i in gefs_fxx_range:
                         fut = pool.submit(_fetch_one, gefs_run_time, "gefs", "atmos.5", i, GEFS_SEARCH, member=member, priority=["aws"])
@@ -264,7 +265,7 @@ def _refresh_cached_forecast() -> None:
                 member_datasets.append(_harmonize_and_concat(ordered, dim="step"))
 
             if len(member_datasets) < MIN_GEFS_MEMBERS:
-                print(f"Forecast refresh: GEFS only got {len(member_datasets)}/30 members — keeping previous cache.")
+                print(f"Forecast refresh: GEFS only got {len(member_datasets)}/{GEFS_MEMBERS_TO_FETCH} members — keeping previous cache.")
             else:
                 gefs_dataset = _harmonize_and_concat(member_datasets, dim="number").load()
                 if _dataset_missing_field(gefs_dataset, {"tp"}):
