@@ -33,7 +33,7 @@ HRRR_EXTENDED_PUBLISH_LAG = timedelta(hours=4)
 ECMWF_PUBLISH_LAG = timedelta(hours=8)
 GFS_PUBLISH_LAG = timedelta(hours=4)
 
-FORECAST_WINDOW_DAYS = 14
+FORECAST_WINDOW_DAYS = 10
 COVERAGE_MARGIN_HOURS = 25
 
 GLOBAL_MAP_SEARCH_GROUPS = [
@@ -206,7 +206,7 @@ def _refresh_cached_forecast() -> None:
             "hrrr_nowcast": (("hrrr", "subh"), ((0, 19), 1), HRRR_SEARCH),
             "hrrr_extended": (("hrrr", "sfc"), ((0, 49), 1), HRRR_SEARCH),
             "ifs": (("ifs", "oper"), ((45, 147), 3), ECMWF_SEARCH),
-            "aifs": (("aifs", "oper"), ((138, 366), 6), ECMWF_SEARCH),
+            "aifs": (("aifs", "oper"), ((138, 276), 6), ECMWF_SEARCH),
         }
 
         run_times: dict[str, datetime] = {}
@@ -225,7 +225,7 @@ def _refresh_cached_forecast() -> None:
             if _stale_data.get("gefs", True):
                 gefs_run_time = _latest_run_time("gefs", now)
                 run_times["gefs"] = gefs_run_time
-                gefs_fxx_range = list(range(6, 366, 6))
+                gefs_fxx_range = list(range(6, 276, 6))
                 gefs_members = [f"p{i:02d}" for i in range(1, GEFS_MEMBERS_TO_FETCH + 1)]
                 for member in gefs_members:
                     for i in gefs_fxx_range:
